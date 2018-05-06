@@ -1,0 +1,127 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script
+      src="http://code.jquery.com/jquery-3.3.1.min.js"
+      integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous"></script>
+    <script src="http://underscorejs.org/underscore-min.js"></script>
+    <style>
+        .app{
+            padding: 10px;
+        }
+    </style>
+
+    <script>
+        // Example:
+        const calcOnServer = (year, salaries_list, success, error) => {
+            $.ajax({
+                method: 'post',
+                crossDomain: true,
+                url: 'http://localhost:5000/api/calc',
+                data: JSON.stringify({year, monthly_salaries_list: salaries_list}),
+                dataType: 'json'
+            }).done(success);
+        };
+
+        const parseFormData = () => {
+            monthly_salaries_list = [];
+            year = null;
+            $.each($('form').serializeArray(), (i, val) => {
+                if (val.name == 'year') {
+                    year = val.value;
+                } else if (val.name == 'amount') {
+                    monthly_salaries_list.push(Number(val.value))
+                }
+            });
+            return {year, monthly_salaries_list}
+        };
+    </script>
+</head>
+<body>
+    <div class="app">
+        <form class="col-sm-3" style="box-shadow: 0px 0px 3px 1px;">
+            <div class="form-group col-sm-10 col-sm-offset-1">
+                <h3>Год рассчета</h3>
+                <select class="form-control" name="year" id="year">
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                </select>
+            </div>
+            <div class="form-group col-sm-10 col-sm-offset-1">
+                <h3>Доходы по месяцам</h3>
+                <input class="form-control" type="text" name="amount" placeholder="01"><br>
+                <input class="form-control" type="text" name="amount" placeholder="02"><br>
+                <input class="form-control" type="text" name="amount" placeholder="03"><br>
+                <input class="form-control" type="text" name="amount" placeholder="04"><br>
+                <input class="form-control" type="text" name="amount" placeholder="05"><br>
+                <input class="form-control" type="text" name="amount" placeholder="06"><br>
+                <input class="form-control" type="text" name="amount" placeholder="07"><br>
+                <input class="form-control" type="text" name="amount" placeholder="08"><br>
+                <input class="form-control" type="text" name="amount" placeholder="09"><br>
+                <input class="form-control" type="text" name="amount" placeholder="10"><br>
+                <input class="form-control" type="text" name="amount" placeholder="11"><br>
+                <input class="form-control" type="text" name="amount" placeholder="12"><br>
+            </div>
+            <div class="form-group col-sm-10 col-sm-offset-1">
+                <a class="btn btn-success col-sm-12" href="#" role="button" id="startCalc">Рассчитать</a>
+            </div>
+        </form>
+        <div class="col-sm-8 col-sm-offset-1"  style="box-shadow: 0px 0px 3px 1px;">
+            <h2>Результаты</h2>
+            <div class="salary-table-place col-sm-6"></div>
+            <div class="dividends-table-place col-sm-6"></div>
+        </div>
+    </div>
+
+
+
+    <script type="text/html" id="salary_table">
+        <div>
+            <h3 class="text-center "><%= type %></h3>
+            <table class="table table-striped table-bordered ">
+                <thead>
+                    <tr>
+                        <th>Месяц</th>
+                        <th>Y</th>
+                        <th>Z</th>
+                        <th>TAX</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% _.each(resultList, function(resultItem, index){ %>
+                        <tr>
+                            <td><%= Number(index) + 1 %></td>
+                            <td><%= resultItem.y %></td>
+                            <td><%= resultItem.z %></td>
+                            <td><%= resultItem.tax %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </script>
+
+    <script>
+        const tableTemplate = _.template($('#salary_table').text())
+
+        $('#startCalc').on('click', () => {
+            formData = parseFormData()
+            calcOnServer(formData.year, formData.monthly_salaries_list, (data) => {
+                let salaryTable = tableTemplate({type: 'Зарплата', resultList: data.data.salaries})
+                let dividendsTable = tableTemplate({type: 'Дивиденды', resultList: data.data.dividends})
+                $('.salary-table-place').html(salaryTable)
+                $('.dividends-table-place').html(dividendsTable)
+            })
+        });
+
+
+    </script>
+
+</body>
+</html>
