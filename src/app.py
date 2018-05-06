@@ -3,7 +3,7 @@ from flask import request
 from tax.salary import year_salary_calc
 from tax.dividends import year_dividends_calc
 
-app = flask.Flask(__name__, template_folder='.')
+app = flask.Flask(__name__, template_folder='./templates/')
 
 
 @app.route('/', methods=['GET'])
