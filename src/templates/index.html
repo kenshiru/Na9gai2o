@@ -20,7 +20,7 @@
             $.ajax({
                 method: 'post',
                 crossDomain: true,
-                url: 'http://localhost:5000/api/calc',
+                url: 'http://' + document.location.host + '/api/calc',
                 data: JSON.stringify({year, monthly_salaries_list: salaries_list}),
                 dataType: 'json'
             }).done(success);
