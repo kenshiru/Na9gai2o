@@ -1,6 +1,6 @@
 import os
-from salary import year_salary_calc
-from dividends import year_dividends_calc
+from tax.salary import year_salary_calc
+from tax.dividends import year_dividends_calc
 
 args = os.sys.argv
 year = int(args[1])
