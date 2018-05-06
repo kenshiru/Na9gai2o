@@ -1,7 +1,7 @@
 import flask
 from flask import request
-from src.tax.salary import year_salary_calc
-from src.tax.dividends import year_dividends_calc
+from tax.salary import year_salary_calc
+from tax.dividends import year_dividends_calc
 
 app = flask.Flask(__name__, template_folder='.')
 
