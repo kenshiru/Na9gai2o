@@ -8,6 +8,7 @@
       integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
       crossorigin="anonymous"></script>
     <script src="http://underscorejs.org/underscore-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
     <style>
         .app{
             padding: 10px;
@@ -72,8 +73,13 @@
                 <a class="btn btn-success col-sm-12" href="#" role="button" id="startCalc">Рассчитать</a>
             </div>
         </form>
-        <div class="col-sm-8 col-sm-offset-1"  style="box-shadow: 0px 0px 3px 1px;">
+        <div class="col-sm-8 col-sm-offset-1 results"  style="box-shadow: 0px 0px 3px 1px; display: none;">
             <h2>Результаты</h2>
+            <h3>Доход</h3>
+            <canvas id="zChart" height="200"></canvas>
+            <h3>Налоги</h3>
+            <canvas id="taxChart" height="200"></canvas>
+
             <div class="salary-table-place col-sm-6"></div>
             <div class="dividends-table-place col-sm-6"></div>
         </div>
@@ -82,6 +88,7 @@
 
 
     <script type="text/html" id="salary_table">
+
         <div>
             <h3 class="text-center "><%= type %></h3>
             <table class="table table-striped table-bordered ">
@@ -97,9 +104,9 @@
                     <% _.each(resultList, function(resultItem, index){ %>
                         <tr>
                             <td><%= Number(index) + 1 %></td>
-                            <td><%= resultItem.y %></td>
-                            <td><%= resultItem.z %></td>
-                            <td><%= resultItem.tax %></td>
+                            <td><%= resultItem.y.toFixed(2) %></td>
+                            <td><%= resultItem.z.toFixed(2) %></td>
+                            <td><%= resultItem.tax.toFixed(2) %></td>
                         </tr>
                     <% }); %>
                 </tbody>
@@ -110,16 +117,68 @@
     <script>
         const tableTemplate = _.template($('#salary_table').text())
 
+        function objToLists(objList) {
+            z = [];
+            tax = [];
+            for (obj of objList) {
+                z.push(obj.z);
+                tax.push(obj.tax);
+            }
+            return {z,tax}
+        }
+
+
         $('#startCalc').on('click', () => {
             formData = parseFormData()
             calcOnServer(formData.year, formData.monthly_salaries_list, (data) => {
+                console.log(data.data.salaries)
                 let salaryTable = tableTemplate({type: 'Зарплата', resultList: data.data.salaries})
                 let dividendsTable = tableTemplate({type: 'Дивиденды', resultList: data.data.dividends})
                 $('.salary-table-place').html(salaryTable)
-                $('.dividends-table-place').html(dividendsTable)
+
+                let sal = objToLists(data.data.salaries);
+                let div = objToLists(data.data.dividends);
+                buildSalaryChart("#zChart", sal.z, div.z);
+                buildSalaryChart("#taxChart", sal.tax, div.tax);
+
+                $('.dividends-table-place').html(dividendsTable);
+                $('.results').css('display', 'block');
+
             })
         });
 
+        function buildSalaryChart(canvas, salaryData, dividendsData) {
+            var chartCanvas = $(canvas)
+            $(chartCanvas).attr('width', $('.results').width())
+            new Chart(chartCanvas, {
+                type: 'bar',
+                data: {
+                    //labels: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
+                    labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+
+                    datasets: [
+                        {
+                            label: 'Зарплата',
+                            data: salaryData,
+                            backgroundColor: 'rgb(0, 255, 0)'
+                        }, {
+                            label: 'Дивиденды',
+                            data: dividendsData,
+                            backgroundColor: 'rgb(0, 0, 255)'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero:true
+                            }
+                        }]
+                    }
+                }
+            });
+        };
 
     </script>
 
